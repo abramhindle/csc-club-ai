@@ -139,17 +139,22 @@
 (defmethod player-position ((m tron-map))
   (my-position m))
 
+(defmethod inside? ((m tron-map) (x fixnum) (y fixnum))
+  (and (>= x  0) (< x (x-of m)) (>= y 0) (< y (y-of m))))
 
 (defmethod set-wall! ((m tron-map) (x fixnum) (y fixnum))
-  (setf (aref (map-of m) x y) #\#)
+  (when (inside? m x y)
+    (setf (aref (map-of m) x y) #\#))
   m)
 
 (defmethod set-player! ((m tron-map) (x fixnum) (y fixnum))
-  (setf (aref (map-of m) x y) #\1)
+  (when (inside? m x y)
+    (setf (aref (map-of m) x y) #\1))
   (setf (slot-value m 'position-1) (list x y)))
 
 (defmethod set-enemy! ((m tron-map) (x fixnum) (y fixnum))
-  (setf (aref (map-of m) x y) #\2)
+  (when (inside? m x y)
+    (setf (aref (map-of m) x y) #\2))
   (setf (slot-value m 'position-2) (list x y)))
 
 
