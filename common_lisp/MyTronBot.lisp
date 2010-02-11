@@ -40,6 +40,9 @@
   (print-map m)
 ;  (let ((mov (dof-bot m)))
   (let ((mov (minimax-bot m)))
+;  (let ((mov (if (same-zone m) 
+;                 (minimax-bot m)
+;                 (dof-bot m))))
     (logmsg "my move " mov "~%")
     (move mov)))
 ;  (move :left))
@@ -124,6 +127,8 @@
 (defmethod enemy-count ((m tron-map) (x fixnum) (y fixnum))
   (fill-count #'has-enemy m x y))
 
+
+
 (defmethod dof-bot ((m tron-map))
   (labels ((idof-fill (m x y) (if (wall? m x y) 0 (dof-fill m x y))))
     (let* ((pp (player-position m))
@@ -150,6 +155,14 @@
 (defvar *win*  10000)
 (defvar *lose* -10000)
 (defun square (x) (* x x))
+
+(defun ldof-fill (m x y) (if (wall? m x y) *lose* (dof-fill m x y)))
+
+
+(defun same-zone (m)
+  (let* ((pp (player-position m)))
+     (> (enemy-count m (car pp) (cadr pp)) 0)))
+         
 (defun score-position (m)
   (let* ((pp (player-position m))
          (ep (enemy-position m))
@@ -167,12 +180,19 @@
       ((and esurr psurr) *draw*)
       ((and esurr (not psurr)) *win*)
       ((and (not esurr) psurr) *lose*)
-      ((not same-zone) 
-       (let ((pfill (filled-count m px py))
-             (efill (filled-count m ex ey)))
-         (* (/ asize 3) (- pfill efill)))) ; how much time do we have left
-      (same-zone (- asize (+ (square (- py ey)) (square (- px ex)))))
-      (t 0))))
+      (t (ldof-fill m px py)))))
+
+;;      ((not same-zone) 
+;;       (let ((pfill (filled-count m px py))
+;;             (efill (filled-count m ex ey)))
+;;         (* (/ asize 3) (- pfill efill)))) ; how much time do we have left
+
+;;       (let ((pfill (filled-count m px py))
+;;             (efill (filled-count m ex ey)))
+;;         (* (/ asize 3) (- pfill efill)))) ; how much time do we have left
+;;      (same-zone (idof-fill m px py))
+                                        ;(+ (* 2 (idof-fill m x y)) (- asize (+ (square (- py ey)) (square (- px ex)))))
+;;      (t 0))))
 
 (defun enemy-surrounded (m)
   (let ((ep (enemy-position m)))
@@ -251,7 +271,8 @@
                            (let ((nm (eval-enemy-move m move)))
                              (cons move (minimax-search nm (- depth 1) t))))
                          moves))
-                (list (score-position m)))))))
+                (list *lose*))))))
+;                (list (score-position m)))))))
 
 (defmethod minimax-bot ((m tron-map))
   (let ((choice (minimax-search m 5 nil)))
